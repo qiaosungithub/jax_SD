@@ -2,7 +2,7 @@
 
 try jax implementation of Stable Diffusion API
 
-# official documentation
+# official documentation (tang)
 
 🤗 Diffusers supports Flax for super fast inference on Google TPUs, such as those available in Colab, Kaggle or Google Cloud Platform. This guide shows you how to run inference with Stable Diffusion using JAX/Flax.
 
