@@ -1,0 +1,392 @@
+decoder:
+  conv_in:
+    bias: (512,)
+    kernel: (3, 3, 16, 512)
+  conv_out:
+    bias: (3,)
+    kernel: (3, 3, 128, 3)
+  mid_ResBlock_1:
+    conv1:
+      bias: (512,)
+      kernel: (3, 3, 512, 512)
+    conv2:
+      bias: (512,)
+      kernel: (3, 3, 512, 512)
+    norm1:
+      bias: (512,)
+      scale: (512,)
+    norm2:
+      bias: (512,)
+      scale: (512,)
+  mid_ResBlock_2:
+    conv1:
+      bias: (512,)
+      kernel: (3, 3, 512, 512)
+    conv2:
+      bias: (512,)
+      kernel: (3, 3, 512, 512)
+    norm1:
+      bias: (512,)
+      scale: (512,)
+    norm2:
+      bias: (512,)
+      scale: (512,)
+  mid_attn_1:
+    norm:
+      bias: (512,)
+      scale: (512,)
+    proj:
+      _flax_linear:
+        bias: (512,)
+        kernel: (512, 512)
+    qkv:
+      _flax_linear:
+        bias: (1536,)
+        kernel: (512, 1536)
+  norm_out:
+    bias: (128,)
+    scale: (128,)
+  up_0_ResBlock_0:
+    conv1:
+      bias: (128,)
+      kernel: (3, 3, 256, 128)
+    conv2:
+      bias: (128,)
+      kernel: (3, 3, 128, 128)
+    nin_shortcut:
+      bias: (128,)
+      kernel: (1, 1, 256, 128)
+    norm1:
+      bias: (256,)
+      scale: (256,)
+    norm2:
+      bias: (128,)
+      scale: (128,)
+  up_0_ResBlock_1:
+    conv1:
+      bias: (128,)
+      kernel: (3, 3, 128, 128)
+    conv2:
+      bias: (128,)
+      kernel: (3, 3, 128, 128)
+    norm1:
+      bias: (128,)
+      scale: (128,)
+    norm2:
+      bias: (128,)
+      scale: (128,)
+  up_0_ResBlock_2:
+    conv1:
+      bias: (128,)
+      kernel: (3, 3, 128, 128)
+    conv2:
+      bias: (128,)
+      kernel: (3, 3, 128, 128)
+    norm1:
+      bias: (128,)
+      scale: (128,)
+    norm2:
+      bias: (128,)
+      scale: (128,)
+  up_1_ResBlock_0:
+    conv1:
+      bias: (256,)
+      kernel: (3, 3, 512, 256)
+    conv2:
+      bias: (256,)
+      kernel: (3, 3, 256, 256)
+    nin_shortcut:
+      bias: (256,)
+      kernel: (1, 1, 512, 256)
+    norm1:
+      bias: (512,)
+      scale: (512,)
+    norm2:
+      bias: (256,)
+      scale: (256,)
+  up_1_ResBlock_1:
+    conv1:
+      bias: (256,)
+      kernel: (3, 3, 256, 256)
+    conv2:
+      bias: (256,)
+      kernel: (3, 3, 256, 256)
+    norm1:
+      bias: (256,)
+      scale: (256,)
+    norm2:
+      bias: (256,)
+      scale: (256,)
+  up_1_ResBlock_2:
+    conv1:
+      bias: (256,)
+      kernel: (3, 3, 256, 256)
+    conv2:
+      bias: (256,)
+      kernel: (3, 3, 256, 256)
+    norm1:
+      bias: (256,)
+      scale: (256,)
+    norm2:
+      bias: (256,)
+      scale: (256,)
+  up_1_upsample:
+    conv:
+      bias: (256,)
+      kernel: (3, 3, 256, 256)
+  up_2_ResBlock_0:
+    conv1:
+      bias: (512,)
+      kernel: (3, 3, 512, 512)
+    conv2:
+      bias: (512,)
+      kernel: (3, 3, 512, 512)
+    norm1:
+      bias: (512,)
+      scale: (512,)
+    norm2:
+      bias: (512,)
+      scale: (512,)
+  up_2_ResBlock_1:
+    conv1:
+      bias: (512,)
+      kernel: (3, 3, 512, 512)
+    conv2:
+      bias: (512,)
+      kernel: (3, 3, 512, 512)
+    norm1:
+      bias: (512,)
+      scale: (512,)
+    norm2:
+      bias: (512,)
+      scale: (512,)
+  up_2_ResBlock_2:
+    conv1:
+      bias: (512,)
+      kernel: (3, 3, 512, 512)
+    conv2:
+      bias: (512,)
+      kernel: (3, 3, 512, 512)
+    norm1:
+      bias: (512,)
+      scale: (512,)
+    norm2:
+      bias: (512,)
+      scale: (512,)
+  up_2_upsample:
+    conv:
+      bias: (512,)
+      kernel: (3, 3, 512, 512)
+  up_3_ResBlock_0:
+    conv1:
+      bias: (512,)
+      kernel: (3, 3, 512, 512)
+    conv2:
+      bias: (512,)
+      kernel: (3, 3, 512, 512)
+    norm1:
+      bias: (512,)
+      scale: (512,)
+    norm2:
+      bias: (512,)
+      scale: (512,)
+  up_3_ResBlock_1:
+    conv1:
+      bias: (512,)
+      kernel: (3, 3, 512, 512)
+    conv2:
+      bias: (512,)
+      kernel: (3, 3, 512, 512)
+    norm1:
+      bias: (512,)
+      scale: (512,)
+    norm2:
+      bias: (512,)
+      scale: (512,)
+  up_3_ResBlock_2:
+    conv1:
+      bias: (512,)
+      kernel: (3, 3, 512, 512)
+    conv2:
+      bias: (512,)
+      kernel: (3, 3, 512, 512)
+    norm1:
+      bias: (512,)
+      scale: (512,)
+    norm2:
+      bias: (512,)
+      scale: (512,)
+  up_3_upsample:
+    conv:
+      bias: (512,)
+      kernel: (3, 3, 512, 512)
+encoder:
+  conv3x3_in:
+    bias: (128,)
+    kernel: (3, 3, 3, 128)
+  conv_out:
+    bias: (32,)
+    kernel: (3, 3, 512, 32)
+  down_0_ResBlock_0:
+    conv1:
+      bias: (128,)
+      kernel: (3, 3, 128, 128)
+    conv2:
+      bias: (128,)
+      kernel: (3, 3, 128, 128)
+    norm1:
+      bias: (128,)
+      scale: (128,)
+    norm2:
+      bias: (128,)
+      scale: (128,)
+  down_0_ResBlock_1:
+    conv1:
+      bias: (128,)
+      kernel: (3, 3, 128, 128)
+    conv2:
+      bias: (128,)
+      kernel: (3, 3, 128, 128)
+    norm1:
+      bias: (128,)
+      scale: (128,)
+    norm2:
+      bias: (128,)
+      scale: (128,)
+  down_0_downsample:
+    conv:
+      bias: (128,)
+      kernel: (3, 3, 128, 128)
+  down_1_ResBlock_0:
+    conv1:
+      bias: (256,)
+      kernel: (3, 3, 128, 256)
+    conv2:
+      bias: (256,)
+      kernel: (3, 3, 256, 256)
+    nin_shortcut:
+      bias: (256,)
+      kernel: (1, 1, 128, 256)
+    norm1:
+      bias: (128,)
+      scale: (128,)
+    norm2:
+      bias: (256,)
+      scale: (256,)
+  down_1_ResBlock_1:
+    conv1:
+      bias: (256,)
+      kernel: (3, 3, 256, 256)
+    conv2:
+      bias: (256,)
+      kernel: (3, 3, 256, 256)
+    norm1:
+      bias: (256,)
+      scale: (256,)
+    norm2:
+      bias: (256,)
+      scale: (256,)
+  down_1_downsample:
+    conv:
+      bias: (256,)
+      kernel: (3, 3, 256, 256)
+  down_2_ResBlock_0:
+    conv1:
+      bias: (512,)
+      kernel: (3, 3, 256, 512)
+    conv2:
+      bias: (512,)
+      kernel: (3, 3, 512, 512)
+    nin_shortcut:
+      bias: (512,)
+      kernel: (1, 1, 256, 512)
+    norm1:
+      bias: (256,)
+      scale: (256,)
+    norm2:
+      bias: (512,)
+      scale: (512,)
+  down_2_ResBlock_1:
+    conv1:
+      bias: (512,)
+      kernel: (3, 3, 512, 512)
+    conv2:
+      bias: (512,)
+      kernel: (3, 3, 512, 512)
+    norm1:
+      bias: (512,)
+      scale: (512,)
+    norm2:
+      bias: (512,)
+      scale: (512,)
+  down_2_downsample:
+    conv:
+      bias: (512,)
+      kernel: (3, 3, 512, 512)
+  down_3_ResBlock_0:
+    conv1:
+      bias: (512,)
+      kernel: (3, 3, 512, 512)
+    conv2:
+      bias: (512,)
+      kernel: (3, 3, 512, 512)
+    norm1:
+      bias: (512,)
+      scale: (512,)
+    norm2:
+      bias: (512,)
+      scale: (512,)
+  down_3_ResBlock_1:
+    conv1:
+      bias: (512,)
+      kernel: (3, 3, 512, 512)
+    conv2:
+      bias: (512,)
+      kernel: (3, 3, 512, 512)
+    norm1:
+      bias: (512,)
+      scale: (512,)
+    norm2:
+      bias: (512,)
+      scale: (512,)
+  mid_ResBlock_1:
+    conv1:
+      bias: (512,)
+      kernel: (3, 3, 512, 512)
+    conv2:
+      bias: (512,)
+      kernel: (3, 3, 512, 512)
+    norm1:
+      bias: (512,)
+      scale: (512,)
+    norm2:
+      bias: (512,)
+      scale: (512,)
+  mid_ResBlock_2:
+    conv1:
+      bias: (512,)
+      kernel: (3, 3, 512, 512)
+    conv2:
+      bias: (512,)
+      kernel: (3, 3, 512, 512)
+    norm1:
+      bias: (512,)
+      scale: (512,)
+    norm2:
+      bias: (512,)
+      scale: (512,)
+  mid_attn_1:
+    norm:
+      bias: (512,)
+      scale: (512,)
+    proj:
+      _flax_linear:
+        bias: (512,)
+        kernel: (512, 512)
+    qkv:
+      _flax_linear:
+        bias: (1536,)
+        kernel: (512, 1536)
+  norm_out:
+    bias: (512,)
+    scale: (512,)

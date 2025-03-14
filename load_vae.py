@@ -63,7 +63,21 @@ if __name__ == "__main__":
     rng = random.key(0)
 
     model = SDVAE(dtype=jnp.bfloat16)
-    # load model from .safetensors file
 
-    # wan
+    # init VAE model
     params, batch_stats = initialized(rng, (1, 128, 128, 3), model)
+
+    # # try whether it can run with different sizes
+    # x = model.apply({"params": params, "batch_stats": batch_stats}, jnp.ones((1, 256, 256, 3), model.dtype), rng, method=model.encode)
+    # print(x.shape)
+
+    def print_tree(tree, indent=""):
+        for k, v in tree.items():
+            if isinstance(v, dict):
+                print(f"{indent}{k}:")
+                print_tree(v, indent + "  ")
+            else:
+                print(f"{indent}{k}: {v.shape}")
+
+    print_tree(params)
+    print_tree(batch_stats)

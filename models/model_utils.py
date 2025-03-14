@@ -31,18 +31,22 @@ class AttnBlock(nn.Module):
     """
 
     dim: int
-    num_heads: int = 8
+    num_heads: int = 1
     qkv_bias: bool = True
     # norm_layer: nn.Module = bomb
     linear_layer: nn.Module = bomb
     dtype: jnp.dtype = jnp.float32
 
     def setup(self):
+        assert num_heads == 1, "only support 1 head"
         num_heads = self.num_heads; dim = self.dim; qkv_bias = self.qkv_bias
         self.head_dim = dim // num_heads
         self.scale = self.head_dim ** -0.5
 
-        self.qkv = self.linear_layer(dim, dim * 3, bias=qkv_bias)
+        # self.qkv = self.linear_layer(dim, dim * 3, bias=qkv_bias)
+        self.q = conv1x1(dim, dtype=self.dtype)
+        self.k = conv1x1(dim, dtype=self.dtype)
+        self.v = conv1x1(dim, dtype=self.dtype)
 
         self.norm = groupnorm(dtype=self.dtype)
 
@@ -52,11 +56,20 @@ class AttnBlock(nn.Module):
         skip = x
         B, H, W, C = x.shape
         x = self.norm(x)
+        q = self.q(x)
+        k = self.k(x)
+        v = self.v(x)
         x = x.reshape(B, H * W, C)
         N = H * W
-        qkv = self.qkv(x).reshape(B, N, 3, self.num_heads, self.head_dim).transpose(2, 0, 3, 1, 4) # 3, B, num_heads, N, head_dim
+        NH = self.num_heads
+        HD = self.head_dim
+        # transpose to B, NH, N, HD
+        q = q.reshape(B, N, NH, HD).transpose(0, 2, 1, 3)
+        k = k.reshape(B, N, NH, HD).transpose(0, 2, 1, 3)
+        v = v.reshape(B, N, NH, HD).transpose(0, 2, 1, 3)
+        # qkv = self.qkv(x).reshape(B, N, 3, self.num_heads, self.head_dim).transpose(2, 0, 3, 1, 4) # 3, B, num_heads, N, head_dim
         # q, k, v = qkv.unbind(0)
-        q, k, v = jnp.split(qkv, 3, axis=0) # k.shape: (1, 2, 6, 64, 64)
+        # q, k, v = jnp.split(qkv, 3, axis=0) # k.shape: (1, 2, 6, 64, 64)
         # q, k = self.q_norm(q), self.k_norm(k)
 
         q = q * self.scale
