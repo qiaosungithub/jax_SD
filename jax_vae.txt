@@ -32,17 +32,21 @@ decoder:
       bias: (512,)
       scale: (512,)
   mid_attn_1:
+    k:
+      bias: (512,)
+      kernel: (1, 1, 512, 512)
     norm:
       bias: (512,)
       scale: (512,)
-    proj:
-      _flax_linear:
-        bias: (512,)
-        kernel: (512, 512)
-    qkv:
-      _flax_linear:
-        bias: (1536,)
-        kernel: (512, 1536)
+    proj_out:
+      bias: (512,)
+      kernel: (1, 1, 512, 512)
+    q:
+      bias: (512,)
+      kernel: (1, 1, 512, 512)
+    v:
+      bias: (512,)
+      kernel: (1, 1, 512, 512)
   norm_out:
     bias: (128,)
     scale: (128,)
@@ -376,17 +380,24 @@ encoder:
       bias: (512,)
       scale: (512,)
   mid_attn_1:
+    k:
+      bias: (512,)
+      kernel: (1, 1, 512, 512)
     norm:
       bias: (512,)
       scale: (512,)
-    proj:
-      _flax_linear:
-        bias: (512,)
-        kernel: (512, 512)
-    qkv:
-      _flax_linear:
-        bias: (1536,)
-        kernel: (512, 1536)
+    proj_out:
+      bias: (512,)
+      kernel: (1, 1, 512, 512)
+    q:
+      bias: (512,)
+      kernel: (1, 1, 512, 512)
+    v:
+      bias: (512,)
+      kernel: (1, 1, 512, 512)
   norm_out:
     bias: (512,)
     scale: (512,)
+[1;34mwandb[0m: 
+[1;34mwandb[0m: 🚀 View run [33mcurrant-meringue-16[0m at: [34mhttps://wandb.ai/zhh24-massachusetts-institute-of-technology/SD3/runs/mlgxowj0[0m
+[1;34mwandb[0m: Find logs at: [1;35mwandb/run-20250314_144853-mlgxowj0/logs[0m

@@ -34,11 +34,11 @@ class AttnBlock(nn.Module):
     num_heads: int = 1
     qkv_bias: bool = True
     # norm_layer: nn.Module = bomb
-    linear_layer: nn.Module = bomb
+    # linear_layer: nn.Module = bomb
     dtype: jnp.dtype = jnp.float32
 
     def setup(self):
-        assert num_heads == 1, "only support 1 head"
+        assert self.num_heads == 1, "only support 1 head"
         num_heads = self.num_heads; dim = self.dim; qkv_bias = self.qkv_bias
         self.head_dim = dim // num_heads
         self.scale = self.head_dim ** -0.5
@@ -50,7 +50,7 @@ class AttnBlock(nn.Module):
 
         self.norm = groupnorm(dtype=self.dtype)
 
-        self.proj = self.linear_layer(dim, dim, bias=True)
+        self.proj_out = conv1x1(dim, dtype=self.dtype)
 
     def __call__(self, x):
         skip = x
@@ -63,10 +63,10 @@ class AttnBlock(nn.Module):
         N = H * W
         NH = self.num_heads
         HD = self.head_dim
-        # transpose to B, NH, N, HD
-        q = q.reshape(B, N, NH, HD).transpose(0, 2, 1, 3)
-        k = k.reshape(B, N, NH, HD).transpose(0, 2, 1, 3)
-        v = v.reshape(B, N, NH, HD).transpose(0, 2, 1, 3)
+        # transpose to 1, B, NH, N, HD
+        q = q.reshape(1, B, N, NH, HD).transpose(0, 1, 3, 2, 4)
+        k = k.reshape(1, B, N, NH, HD).transpose(0, 1, 3, 2, 4)
+        v = v.reshape(1, B, N, NH, HD).transpose(0, 1, 3, 2, 4)
         # qkv = self.qkv(x).reshape(B, N, 3, self.num_heads, self.head_dim).transpose(2, 0, 3, 1, 4) # 3, B, num_heads, N, head_dim
         # q, k, v = qkv.unbind(0)
         # q, k, v = jnp.split(qkv, 3, axis=0) # k.shape: (1, 2, 6, 64, 64)
@@ -79,9 +79,10 @@ class AttnBlock(nn.Module):
         x = attn @ v # (1, 2, 6, 64, 64) ; (1, B, num_heads, i, j) @ (1, B, num_heads, j, head_dim)
         
         x = x[0].transpose(0, 2, 1, 3).reshape(B, N, C)
-        x = self.proj(x)
+        # x = self.proj(x)
         # x = self.proj_drop(x)
         x = x.reshape(B, H, W, C)
+        x = self.proj_out(x)
         return x + skip
 
 class TorchLinear(nn.Module):
@@ -118,4 +119,8 @@ class TorchLinear(nn.Module):
         return self._flax_linear(x)
 
 DiTLinear = partial(TorchLinear, weight_init='xavier_uniform', bias_init='zeros')
-sqaVAEAttention = partial(AttnBlock, linear_layer=DiTLinear, num_heads=1)
+sqaVAEAttention = partial(
+    AttnBlock, 
+    # linear_layer=DiTLinear, 
+    num_heads=1
+)

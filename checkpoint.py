@@ -14,16 +14,31 @@ def vae_name_map(name, tensor:torch.Tensor):
     """
     # deal with many cases
     path = name.split(".")
-    if path[-1] == "weight":
-        path[-1] = "kernel"
-        assert tensor.ndim == 4, f"tensor.shape: {tensor.shape}"
-        tensor = tensor.numpy().transpose(2, 3, 1, 0)
-        tensor = jnp.array(tensor)
-    elif path[-1] == "bias":
+    if path[-1] == "weight": # can be weight or scale
+        if path[-2].startswith("norm"):
+            path[-1] = "scale"
+            assert tensor.ndim == 1, f"tensor.shape: {tensor.shape}"
+            tensor = tensor.numpy()
+            tensor = jnp.array(tensor)
+        else:
+            assert path[-2].startswith("conv") or path[-2] in ["k", 'q', 'v', 'proj', 'nin_shortcut']
+            path[-1] = "kernel"
+            assert tensor.ndim == 4, f"tensor.shape: {tensor.shape}"
+            tensor = tensor.numpy().transpose(2, 3, 1, 0)
+            tensor = jnp.array(tensor)
+    elif path[-1] in ["bias"]:
         assert tensor.ndim == 1, f"tensor.shape: {tensor.shape}"
         tensor = tensor.numpy()
         tensor = jnp.array(tensor)
-    ########## stop here !!!!!!!!!!!
+    # change name
+    # mid.block_1 -> mid_ResBlock_1
+    if path[1] == "mid" and path[2].startswith("block_"):
+        path[1] = f"mid_ResBlock_" + path[2][6:]
+        path.pop(2)
+    # mid.attn_1 -> mid_attn_1
+    if path[1] == "mid" and path[2].startswith("attn_"):
+        path[1] = f"mid_attn_" + path[2][5:]
+        path.pop(2)
 
 # code for transfering VAE params from pytorch to jax
 with safe_open("/kmh-nfs-ssd-eu-mount/data/SD3.5_pretrained_models/sd3.5_medium.safetensors", framework="pt") as f:
