@@ -1,8 +1,11 @@
 import flax.linen as nn
 import jax.numpy as jnp
-import jax, wandb, os, orbax
+import jax, wandb, os
 from jax import random
-from flax.training import orbax_utils
+from safetensors import safe_open
+import matplotlib.pyplot as plt
+from PIL import Image
+# from flax.training import orbax_utils
 
 from models.vae import VAEEncoder, VAEDecoder
 
@@ -65,19 +68,60 @@ if __name__ == "__main__":
     model = SDVAE(dtype=jnp.bfloat16)
 
     # init VAE model
+    log_for_0("Initializing model...")
     params, batch_stats = initialized(rng, (1, 128, 128, 3), model)
+    log_for_0("Initializing model done.")
 
     # # try whether it can run with different sizes
     # x = model.apply({"params": params, "batch_stats": batch_stats}, jnp.ones((1, 256, 256, 3), model.dtype), rng, method=model.encode)
     # print(x.shape)
 
-    def print_tree(tree, indent=""):
-        for k, v in tree.items():
-            if isinstance(v, dict):
-                print(f"{indent}{k}:")
-                print_tree(v, indent + "  ")
-            else:
-                print(f"{indent}{k}: {v.shape}")
+    # def print_tree(tree, indent=""):
+    #     for k, v in tree.items():
+    #         if isinstance(v, dict):
+    #             print(f"{indent}{k}:")
+    #             print_tree(v, indent + "  ")
+    #         else:
+    #             print(f"{indent}{k}: {v.shape}")
 
-    print_tree(params)
-    print_tree(batch_stats)
+    # print_tree(params)
+    # print_tree(batch_stats)
+
+    assert batch_stats == {}, "batch_stats should be empty."
+    jax_checkpoint_path = "/kmh-nfs-ssd-eu-mount/data/SD3.5_pretrained_models/sd3.5_medium_jax.safetensors"
+
+    # with safe_open(jax_checkpoint_path, framework="flax") as f:
+    #     # for each leaf of params, read from the file
+    #     def fill_params(p, path=""): # p is a pytree
+    #         for k, v in p.items():
+    #             if isinstance(v, dict):
+    #                 fill_params(v, path + k + ".")
+    #             else:
+    #                 tensor = f.get_tensor(path + k)
+    #                 assert tensor is not None, f"tensor is None, path: {path + k}"
+    #                 p[k] = tensor
+
+    #     fill_params(params)
+    #     print("Load params done.")
+
+    # run an encode + decode step for sanity check
+    image_path = "/kmh-nfs-ssd-eu-mount/code/qiao/work/jax_SD/test_image/0/0/4.png"
+    # load the image with PIL
+    image = plt.imread(image_path)
+    image = image[:, :, :3]
+    image = 2 * image - 1
+    # image = Image.open(image_path).convert("RGB")
+    image = jnp.array(image)
+    print(image.shape)
+    image = image[None, ...]
+    image = image.astype(jnp.bfloat16)
+    x = model.apply({"params": params, "batch_stats": batch_stats}, image, rng)
+    # x = image # for debug
+    # save the image with plt
+    x = x[0]
+    print(x.shape)
+    x = x.astype(jnp.float32)
+    x = (x+1)/2
+    x = jnp.clip(x, 0, 1)
+    x = jax.device_get(x)
+    plt.imsave("test.png", x)
