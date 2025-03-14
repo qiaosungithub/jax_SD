@@ -39,6 +39,17 @@ def vae_name_map(name, tensor:torch.Tensor):
     if path[1] == "mid" and path[2].startswith("attn_"):
         path[1] = f"mid_attn_" + path[2][5:]
         path.pop(2)
+    # up.0.block.0 -> up_0_ResBlock_0
+    if path[1] in ["up", 'down'] and path[3] == "block":
+        path[1] = f"{path[1]}_{path[2]}_ResBlock_{path[4]}"
+        path.pop(2)
+        path.pop(2)
+        path.pop(2)
+    # up.1.upsample -> up_1_upsample
+    if path[1] in ["up", 'down'] and path[3] in ["upsample", "downsample"]:
+        path[1] = f"{path[1]}_{path[2]}_{path[3]}"
+        path.pop(2)
+        path.pop(2)
 
 # code for transfering VAE params from pytorch to jax
 with safe_open("/kmh-nfs-ssd-eu-mount/data/SD3.5_pretrained_models/sd3.5_medium.safetensors", framework="pt") as f:

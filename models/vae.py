@@ -110,7 +110,7 @@ class VAEEncoder(nn.Module):
         # self.conv_in = conv3x3(ch, dtype=dtype)
         in_ch_mult = (1,) + tuple(ch_mult)
 
-        hs = [conv3x3(ch, dtype=dtype, name="conv3x3_in")(x)]
+        hs = [conv3x3(ch, dtype=dtype, name="conv_in")(x)]
         for i_level in range(num_resolutions):
             block_in = ch * in_ch_mult[i_level]
             block_out = ch * ch_mult[i_level]
