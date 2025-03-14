@@ -1,3 +1,4 @@
 测.py
 **/__pycache__/
 tmp/
+wandb/

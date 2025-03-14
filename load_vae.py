@@ -9,10 +9,11 @@ from models.vae import VAEEncoder, VAEDecoder
 from utils.logging_utils import log_for_0
 
 class SDVAE(nn.Module):
-    def __init__(self, dtype=jnp.float32):
-        super().__init__()
-        self.encoder = VAEEncoder(dtype=dtype)
-        self.decoder = VAEDecoder(dtype=dtype)
+
+    dtype: jnp.dtype=jnp.float32
+    def setup(self):
+        self.encoder = VAEEncoder(dtype=self.dtype)
+        self.decoder = VAEDecoder(dtype=self.dtype)
 
     def decode(self, latent): # we need to cast to bf16
         return self.decoder(latent)
@@ -25,6 +26,11 @@ class SDVAE(nn.Module):
         noise = random.normal(rng, mean.shape, dtype=mean.dtype)
         return mean + std * noise
 
+    def __call__(self, image, rng):
+        # for init model
+        latent = self.encode(image, rng)
+        return self.decode(latent)
+
 def initialized(key, shape, model):
     """
     Initialize the model, and return the model parameters.
@@ -34,9 +40,11 @@ def initialized(key, shape, model):
     @jax.jit
     def init(*args):
         return model.init(*args)
+    
+    key, 东西 = random.split(key)
 
     log_for_0("Initializing params...")
-    variables = init({"params": key}, jnp.ones(shape, model.dtype))
+    variables = init({"params": key}, jnp.ones(shape, model.dtype), 东西)
     if "batch_stats" not in variables:
         variables["batch_stats"] = {}
     log_for_0("Initializing params done.")
@@ -58,4 +66,4 @@ if __name__ == "__main__":
     # load model from .safetensors file
 
     # wan
-    
+    params, batch_stats = initialized(rng, (1, 128, 128, 3), model)

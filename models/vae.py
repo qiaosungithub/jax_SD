@@ -18,34 +18,35 @@ class ResnetBlock(nn.Module):
 
         # begin of work
         out_channels = in_channels if out_channels is None else out_channels
-        self.out_channels = out_channels
+        # self.out_channels = out_channels
 
         self.norm1 = groupnorm(dtype=dtype)
         self.conv1 = conv3x3(out_channels, dtype=dtype)
         self.norm2 = groupnorm(dtype=dtype)
         self.conv2 = conv3x3(out_channels, dtype=dtype)
-        if self.in_channels != self.out_channels:
+        if in_channels != out_channels:
             self.nin_shortcut = conv1x1(out_channels, dtype=dtype)
         else:
             self.nin_shortcut = None
         # self.swish = nn.silu(inplace=True)
 
-    def forward(self, x):
-        print(f"In ResnetBlock, pos 0")
+    def __call__(self, x):
+        # print(f"in channels: {self.in_channels}, out channels: {self.out_channels}")
+        # print(f"In ResnetBlock, pos 0, x.shape: {x.shape}")
         hidden = x
         hidden = self.norm1(hidden)
-        print(f"In ResnetBlock, pos 1")
+        # print(f"In ResnetBlock, pos 1")
         hidden = nn.silu(hidden)
         hidden = self.conv1(hidden)
-        print(f"In ResnetBlock, pos 2")
+        # print(f"In ResnetBlock, pos 2")
         hidden = self.norm2(hidden)
-        print(f"In ResnetBlock, pos 3")
+        # print(f"In ResnetBlock, pos 3")
         hidden = nn.silu(hidden)
         hidden = self.conv2(hidden)
-        print(f"In ResnetBlock, pos 4")
-        if self.in_channels != self.out_channels:
+        # print(f"In ResnetBlock, pos 4, hidden.shape: {hidden.shape}")
+        if self.in_channels != self.out_channels and self.out_channels is not None:
             x = self.nin_shortcut(x)
-        print(f"In ResnetBlock, pos 5")
+            # print(f"In ResnetBlock, pos 5, x.shape: {x.shape}")
         return x + hidden
 
 
@@ -90,7 +91,7 @@ class VAEEncoder(nn.Module):
     ch: int = 128
     ch_mult: tuple[int] = (1, 2, 4, 4)
     num_res_blocks: int = 2
-    in_channels: int = 3
+    in_channels: int = 3 # not used
     z_channels: int = 16
     dtype: jnp.dtype = jnp.float32
 
@@ -99,23 +100,22 @@ class VAEEncoder(nn.Module):
         ch = self.ch
         ch_mult = self.ch_mult
         num_res_blocks = self.num_res_blocks
-        in_channels = self.in_channels
+        # in_channels = self.in_channels
         z_channels = self.z_channels
         dtype = self.dtype
 
         # preparations
-        self.num_resolutions = len(ch_mult)
-        self.num_res_blocks = num_res_blocks
+        num_resolutions = len(ch_mult)
         # downsampling
         # self.conv_in = conv3x3(ch, dtype=dtype)
         in_ch_mult = (1,) + tuple(ch_mult)
-        self.in_ch_mult = in_ch_mult
 
         hs = [conv3x3(ch, dtype=dtype, name="conv3x3_in")(x)]
-        for i_level in range(self.num_resolutions):
+        for i_level in range(num_resolutions):
             block_in = ch * in_ch_mult[i_level]
             block_out = ch * ch_mult[i_level]
-            for i_block in range(self.num_res_blocks):
+            for i_block in range(num_res_blocks):
+                # print(f"i_level: {i_level}, i_block: {i_block}")
                 h = ResnetBlock(
                     in_channels=block_in,
                     out_channels=block_out,
@@ -123,7 +123,8 @@ class VAEEncoder(nn.Module):
                     name=f"down_{i_level}_ResBlock_{i_block}"
                 )(hs[-1])
                 hs.append(h)
-            if i_level != self.num_resolutions - 1:
+                block_in = block_out
+            if i_level != num_resolutions - 1:
                 h = Downsample(
                     block_in, 
                     dtype=dtype, 

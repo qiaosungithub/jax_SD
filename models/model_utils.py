@@ -48,7 +48,7 @@ class AttnBlock(nn.Module):
 
         self.proj = self.linear_layer(dim, dim, bias=True)
 
-    def forward(self, x):
+    def __call__(self, x):
         skip = x
         B, H, W, C = x.shape
         x = self.norm(x)
