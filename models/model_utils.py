@@ -52,17 +52,25 @@ class AttnBlock(nn.Module):
 
         self.proj_out = conv1x1(dim, dtype=self.dtype)
 
+    def flat_for_attention(self, x: jnp.ndarray):
+        raise NotImplementedError
+        B, H, W, C = x.shape
+        N = H * W
+        NH = self.num_heads
+        HD = self.head_dim
+        x = x.reshape(B, N, C)
+        return x
+
     def __call__(self, x):
         skip = x
         B, H, W, C = x.shape
         x = self.norm(x)
         q = self.q(x)
         k = self.k(x)
-        v = self.v(x)
-        x = x.reshape(B, H * W, C)
+        v = self.v(x) # shape (B, H, W, C)
         N = H * W
         NH = self.num_heads
-        HD = self.head_dim
+        HD = self.head_dim # =dim for 1 head case
         # transpose to 1, B, NH, N, HD
         q = q.reshape(1, B, N, NH, HD).transpose(0, 1, 3, 2, 4)
         k = k.reshape(1, B, N, NH, HD).transpose(0, 1, 3, 2, 4)
@@ -73,10 +81,10 @@ class AttnBlock(nn.Module):
         # q, k = self.q_norm(q), self.k_norm(k)
 
         q = q * self.scale
-        attn = q @ k.transpose(0, 1, 2, 4, 3) # 1, B, num_heads, i, j
-        attn = jax.nn.softmax(attn, axis=-1)
+        attn = q @ k.transpose(0, 1, 2, 4, 3) # 1, B, num_heads, N, N
+        attn = jax.nn.softmax(attn, axis=-1) # 1, B, num_heads, N, N
         # attn = self.attn_drop(attn)
-        x = attn @ v # (1, 2, 6, 64, 64) ; (1, B, num_heads, i, j) @ (1, B, num_heads, j, head_dim)
+        x = attn @ v # 1, B, num_heads, N, head_dim
         
         x = x[0].transpose(0, 2, 1, 3).reshape(B, N, C)
         # x = self.proj(x)

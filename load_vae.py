@@ -28,6 +28,7 @@ class SDVAE(nn.Module):
         std = jnp.exp(0.5 * logvar)
         noise = random.normal(rng, mean.shape, dtype=mean.dtype)
         return mean + std * noise
+        # return mean
 
     def __call__(self, image, rng):
         # for init model
@@ -90,22 +91,22 @@ if __name__ == "__main__":
     assert batch_stats == {}, "batch_stats should be empty."
     jax_checkpoint_path = "/kmh-nfs-ssd-eu-mount/data/SD3.5_pretrained_models/sd3.5_medium_jax.safetensors"
 
-    # with safe_open(jax_checkpoint_path, framework="flax") as f:
-    #     # for each leaf of params, read from the file
-    #     def fill_params(p, path=""): # p is a pytree
-    #         for k, v in p.items():
-    #             if isinstance(v, dict):
-    #                 fill_params(v, path + k + ".")
-    #             else:
-    #                 tensor = f.get_tensor(path + k)
-    #                 assert tensor is not None, f"tensor is None, path: {path + k}"
-    #                 p[k] = tensor
+    with safe_open(jax_checkpoint_path, framework="flax") as f:
+        # for each leaf of params, read from the file
+        def fill_params(p, path=""): # p is a pytree
+            for k, v in p.items():
+                if isinstance(v, dict):
+                    fill_params(v, path + k + ".")
+                else:
+                    tensor = f.get_tensor(path + k)
+                    assert tensor is not None, f"tensor is None, path: {path + k}"
+                    p[k] = tensor
 
-    #     fill_params(params)
-    #     print("Load params done.")
+        fill_params(params)
+        print("Load params done.")
 
     # run an encode + decode step for sanity check
-    image_path = "/kmh-nfs-ssd-eu-mount/code/qiao/work/jax_SD/test_image/0/0/4.png"
+    image_path = "/kmh-nfs-ssd-eu-mount/code/qiao/work/jax_SD/test_image/1/0/1.png"
     # load the image with PIL
     image = plt.imread(image_path)
     image = image[:, :, :3]
@@ -115,13 +116,15 @@ if __name__ == "__main__":
     print(image.shape)
     image = image[None, ...]
     image = image.astype(jnp.bfloat16)
-    x = model.apply({"params": params, "batch_stats": batch_stats}, image, rng)
+    # x = model.apply({"params": params, "batch_stats": batch_stats}, image, method=model.encode, rng=rng)
+    x = model.apply({"params": params, "batch_stats": batch_stats}, image, rng=rng)
     # x = image # for debug
     # save the image with plt
     x = x[0]
+    x = x[:, :, :3]
     print(x.shape)
     x = x.astype(jnp.float32)
     x = (x+1)/2
     x = jnp.clip(x, 0, 1)
     x = jax.device_get(x)
-    plt.imsave("test.png", x)
+    plt.imsave("test_512x512.png", x)

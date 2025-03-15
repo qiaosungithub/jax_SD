@@ -3,6 +3,8 @@ import flax.linen as nn
 import jax.numpy as jnp
 from models.model_utils import conv3x3, conv1x1, groupnorm, sqaVAEAttention
 
+def print_array(x:jnp.ndarray):
+    print(f"mean: {jnp.mean(x)}, square mean: {jnp.mean(x**2)}, max: {jnp.max(x)}, min: {jnp.min(x)}", flush=True)
 
 class ResnetBlock(nn.Module):
 
@@ -97,6 +99,8 @@ class VAEEncoder(nn.Module):
 
     @nn.compact
     def __call__(self, x):
+        print("Enter encoder", flush=True)
+        print_array(x)
         ch = self.ch
         ch_mult = self.ch_mult
         num_res_blocks = self.num_res_blocks
@@ -131,6 +135,8 @@ class VAEEncoder(nn.Module):
                     name=f"down_{i_level}_downsample"
                 )(hs[-1])
                 hs.append(h)
+        print("finish downsampling", flush=True)
+        print_array(hs[-1])
         # middle
         h = hs[-1]
         h = ResnetBlock(
@@ -150,10 +156,14 @@ class VAEEncoder(nn.Module):
             dtype=dtype, 
             name="mid_ResBlock_2"
         )(h)
+        print("finish middle", flush=True)
+        print_array(h)
         # end
-        h = groupnorm(block_in, dtype=dtype, name="norm_out")(h)
+        h = groupnorm(dtype=dtype, name="norm_out")(h)
         h = nn.silu(h)
         h = conv3x3(2*z_channels, dtype=dtype, name="conv_out")(h)
+        print("Exit encoder", flush=True)
+        print_array(h)
         return h
 
 class VAEDecoder(nn.Module):
@@ -219,7 +229,7 @@ class VAEDecoder(nn.Module):
                 )(hidden)
                 curr_res *= 2
         # end
-        hidden = groupnorm(block_in, dtype=dtype, name="norm_out")(hidden)
+        hidden = groupnorm(dtype=dtype, name="norm_out")(hidden)
         hidden = nn.silu(hidden)
         hidden = conv3x3(out_ch, dtype=dtype, name="conv_out")(hidden)
         return hidden
